@@ -1,25 +1,18 @@
-from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File, status, Request
+from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-import os
-import sqlite3
-import base64
-import requests
-import jwt
-import time
-from datetime import datetime
+import os, time, sqlite3, jwt, secrets
 
 # ---------------- CONFIG ----------------
-JWT_SECRET = "lakecityrecordingstudio"  # change before production
+JWT_SECRET = "lakecityrecordingstudio"   # change before production
 JWT_ALGO = "HS256"
 ADMIN_USER = "JAMES"
-ADMIN_PASS = "001JAMES"  # demo only (not secure!)
+ADMIN_PASS = "001JAMES"   # demo only (not secure!)
 
 BASE_DIR = os.path.dirname(__file__)
-
 ADMIN_DIR = os.path.join(BASE_DIR, "admin")
 
 DB_PATH = os.path.join(BASE_DIR, "db.sqlite3")
@@ -31,13 +24,13 @@ app = FastAPI(title="Lake City Studios API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ✅ in production, restrict to your domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Only serve static uploads + admin (no frontend here)
+# Serve static files
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # ---------------- DATABASE ----------------
@@ -50,11 +43,22 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
     cur.executescript('''
-    CREATE TABLE IF NOT EXISTS news (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, content TEXT, created_at INTEGER);
-    CREATE TABLE IF NOT EXISTS tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, event_name TEXT, event_date TEXT, price TEXT, location TEXT, link TEXT, created_at INTEGER);
-    CREATE TABLE IF NOT EXISTS programmes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, start_date TEXT, end_date TEXT, created_at INTEGER);
-    CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price TEXT, currency TEXT, description TEXT, image_url TEXT, product_url TEXT, created_at INTEGER);
-    CREATE TABLE IF NOT EXISTS subscribers (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, created_at INTEGER);
+    CREATE TABLE IF NOT EXISTS news (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT, content TEXT, image_url TEXT, created_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_name TEXT, event_date TEXT, price TEXT, location TEXT, link TEXT, image_url TEXT, created_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS programmes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT, description TEXT, start_date TEXT, end_date TEXT, image_url TEXT, created_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT, price TEXT, currency TEXT, description TEXT, image_url TEXT, product_url TEXT, created_at INTEGER
+    );
     ''')
     conn.commit()
     conn.close()
@@ -100,54 +104,107 @@ def serve_admin_dashboard(user=Depends(verify_token_header)):
         raise HTTPException(404, f"Dashboard not found at {file_path}")
     return FileResponse(file_path)
 
-# ---------------- MPESA INTEGRATION ----------------
-MPESA_CONSUMER_KEY = "YOUR_CONSUMER_KEY"
-MPESA_CONSUMER_SECRET = "YOUR_CONSUMER_SECRET"
-MPESA_SHORTCODE = "174379"  # sandbox test shortcode
-MPESA_PASSKEY = "YOUR_PASSKEY"
-MPESA_BASE_URL = "https://sandbox.safaricom.co.ke"
+# ---------------- UPLOAD ROUTES ----------------
+@app.post("/admin/upload/programme")
+def upload_programme(title: str, description: str, start_date: str, end_date: str,
+                     file: UploadFile = File(...), user=Depends(verify_token_header)):
+    filename = f"programme_{secrets.token_hex(8)}_{file.filename}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as buffer:
+        buffer.write(file.file.read())
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""INSERT INTO programmes (title, description, start_date, end_date, image_url, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (title, description, start_date, end_date, f"/static/uploads/{filename}", int(time.time())))
+    conn.commit()
+    conn.close()
+    return {"message": "Programme uploaded", "image_url": f"/static/uploads/{filename}"}
 
-def get_mpesa_token():
-    resp = requests.get(
-        f"{MPESA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials",
-        auth=(MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET)
-    )
-    if resp.status_code != 200:
-        raise HTTPException(500, "Failed to authenticate M-Pesa")
-    return resp.json()["access_token"]
+@app.post("/admin/upload/product")
+def upload_product(name: str, price: str, currency: str, description: str,
+                   file: UploadFile = File(...), user=Depends(verify_token_header)):
+    filename = f"product_{secrets.token_hex(8)}_{file.filename}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as buffer:
+        buffer.write(file.file.read())
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""INSERT INTO products (name, price, currency, description, image_url, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (name, price, currency, description, f"/static/uploads/{filename}", int(time.time())))
+    conn.commit()
+    conn.close()
+    return {"message": "Product uploaded", "image_url": f"/static/uploads/{filename}"}
 
-@app.post("/pay/mpesa")
-def stk_push_payment(phone: str, amount: int):
-    token = get_mpesa_token()
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    password = base64.b64encode((MPESA_SHORTCODE + MPESA_PASSKEY + timestamp).encode()).decode()
+@app.post("/admin/upload/news")
+def upload_news(title: str, content: str, file: UploadFile = File(...),
+                user=Depends(verify_token_header)):
+    filename = f"news_{secrets.token_hex(8)}_{file.filename}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as buffer:
+        buffer.write(file.file.read())
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""INSERT INTO news (title, content, image_url, created_at)
+                   VALUES (?, ?, ?, ?)""",
+                (title, content, f"/static/uploads/{filename}", int(time.time())))
+    conn.commit()
+    conn.close()
+    return {"message": "News uploaded", "image_url": f"/static/uploads/{filename}"}
 
-    payload = {
-        "BusinessShortCode": MPESA_SHORTCODE,
-        "Password": password,
-        "Timestamp": timestamp,
-        "TransactionType": "CustomerPayBillOnline",
-        "Amount": amount,
-        "PartyA": phone,
-        "PartyB": MPESA_SHORTCODE,
-        "PhoneNumber": phone,
-        "CallBackURL": "https://lakecitystudios.co.ke/api/mpesa/callback",
-        "AccountReference": "Booking",
-        "TransactionDesc": "Studio Booking Payment"
-    }
+@app.post("/admin/upload/ticket")
+def upload_ticket(event_name: str, event_date: str, price: str, location: str, link: str,
+                  file: UploadFile = File(...), user=Depends(verify_token_header)):
+    filename = f"ticket_{secrets.token_hex(8)}_{file.filename}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as buffer:
+        buffer.write(file.file.read())
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""INSERT INTO tickets (event_name, event_date, price, location, link, image_url, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (event_name, event_date, price, location, link, f"/static/uploads/{filename}", int(time.time())))
+    conn.commit()
+    conn.close()
+    return {"message": "Ticket uploaded", "image_url": f"/static/uploads/{filename}"}
 
-    resp = requests.post(
-        f"{MPESA_BASE_URL}/mpesa/stkpush/v1/processrequest",
-        json=payload,
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    return resp.json()
+# ---------------- PUBLIC APIS ----------------
+@app.get("/api/programmes")
+def get_programmes():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM programmes ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
-@app.post("/api/mpesa/callback")
-async def mpesa_callback(request: Request):
-    data = await request.json()
-    print("✅ M-Pesa Callback:", data)
-    return {"ResultCode": 0, "ResultDesc": "Accepted"}
+@app.get("/api/products")
+def get_products():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM products ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.get("/api/news")
+def get_news():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM news ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+@app.get("/api/tickets")
+def get_tickets():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM tickets ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 # ---------------- MAIN ENTRY ----------------
 if __name__ == "__main__":

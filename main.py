@@ -304,4 +304,4 @@ def edit_programme(programme_id: int, data: EditProgramme, user=Depends(verify_t
 if __name__ == "__main__":
     import uvicorn, os
     port = int(os.environ.get("PORT", 8000))   # Railway assigns the port
-    uvicorn.run("main:app", host="0.0.0.0", --port $PORT)
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

@@ -59,6 +59,14 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT, price TEXT, currency TEXT, description TEXT, image_url TEXT, product_url TEXT, created_at INTEGER
     );
+    CREATE TABLE IF NOT EXISTS subscribers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE, created_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_name TEXT, client_email TEXT, item_type TEXT, item_id INTEGER, quantity INTEGER, created_at INTEGER
+    );
     ''')
     conn.commit()
     conn.close()
@@ -205,6 +213,92 @@ def get_tickets():
     rows = cur.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+# ---------------- NEWSLETTER ----------------
+class SubscribeIn(BaseModel):
+    email: str
+
+@app.post("/api/subscribe")
+def subscribe(sub: SubscribeIn):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO subscribers (email, created_at) VALUES (?, ?)",
+                    (sub.email, int(time.time())))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.close()
+        raise HTTPException(400, "Email already subscribed")
+    conn.close()
+
+    # also save in a txt file
+    with open(os.path.join(BASE_DIR, "subscribers.txt"), "a") as f:
+        f.write(f"{time.ctime()} | {sub.email}\n")
+
+    return {"message": "Subscribed successfully"}
+
+@app.get("/admin/subscribers")
+def get_subscribers(user=Depends(verify_token_header)):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM subscribers ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+# ---------------- ORDERS ----------------
+class OrderIn(BaseModel):
+    client_name: str
+    client_email: str
+    item_type: str   # "product" | "ticket" | "programme"
+    item_id: int
+    quantity: int
+
+@app.post("/api/order")
+def create_order(order: OrderIn):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""INSERT INTO orders (client_name, client_email, item_type, item_id, quantity, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (order.client_name, order.client_email, order.item_type,
+                 order.item_id, order.quantity, int(time.time())))
+    conn.commit()
+    conn.close()
+
+    # also save in a txt file
+    log_line = f"{time.ctime()} | {order.client_name} | {order.client_email} | {order.item_type}:{order.item_id} | qty={order.quantity}\n"
+    with open(os.path.join(BASE_DIR, "orders_log.txt"), "a") as f:
+        f.write(log_line)
+
+    return {"message": "Order saved successfully"}
+
+# ---------------- ADMIN DELETE/EDIT ----------------
+@app.delete("/admin/product/{product_id}")
+def delete_product(product_id: int, user=Depends(verify_token_header)):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM products WHERE id=?", (product_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Product deleted"}
+
+class EditProgramme(BaseModel):
+    title: str
+    description: str
+    start_date: str
+    end_date: str
+
+@app.put("/admin/programme/{programme_id}")
+def edit_programme(programme_id: int, data: EditProgramme, user=Depends(verify_token_header)):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""UPDATE programmes
+                   SET title=?, description=?, start_date=?, end_date=?
+                   WHERE id=?""",
+                (data.title, data.description, data.start_date, data.end_date, programme_id))
+    conn.commit()
+    conn.close()
+    return {"message": "Programme updated"}
 
 # ---------------- MAIN ENTRY ----------------
 if __name__ == "__main__":

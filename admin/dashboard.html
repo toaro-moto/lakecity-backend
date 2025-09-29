@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Studio — Dashboard</title><script src="https://cdn.tailwindcss.com"></script></head>
+
+<body class="bg-neutral-900 text-white min-h-screen">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col justify-between py-6 px-4">
+      <div>
+        <div class="flex items-center gap-2 mb-8">
+          <img src="STUDIO LOGO.png" alt="Lake City Logo" class="w-10 h-10 rounded-full object-cover border-2 border-blue-500 shadow" onerror="this.src='https://ui-avatars.com/api/?name=Lake+City&background=0D8ABC&color=fff'">
+          <span class="text-2xl font-bold tracking-tight">Lake City Studio</span>
+        </div>
+        <nav class="space-y-2">
+          <a href="#" class="tab-btn flex items-center gap-2 p-2 rounded hover:bg-neutral-800 transition" data-tab="summary"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg> <span>Dashboard</span></a>
+          <a href="#" class="tab-btn flex items-center gap-2 p-2 rounded hover:bg-neutral-800 transition" data-tab="news"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> <span>News</span></a>
+          <a href="#" class="tab-btn flex items-center gap-2 p-2 rounded hover:bg-neutral-800 transition" data-tab="tickets"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg> <span>Tickets</span></a>
+          <a href="#" class="tab-btn flex items-center gap-2 p-2 rounded hover:bg-neutral-800 transition" data-tab="products"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> <span>Products</span></a>
+          <a href="#" class="tab-btn flex items-center gap-2 p-2 rounded hover:bg-neutral-800 transition" data-tab="programmes"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3"/></svg> <span>Programmes</span></a>
+        </nav>
+      </div>
+      <div>
+        <button id="logout" class="w-full flex items-center gap-2 p-2 rounded bg-neutral-800 text-red-400 hover:bg-neutral-700 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/></svg> Logout</button>
+      </div>
+    </aside>
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Top bar -->
+      <header class="flex items-center justify-between bg-neutral-950 px-8 py-4 border-b border-neutral-800">
+        <div class="flex items-center gap-4">
+          <span class="text-xl font-bold tracking-tight">Studio Dashboard</span>
+          <span class="bg-blue-700 text-xs px-2 py-1 rounded ml-2">Admin</span>
+        </div>
+        <div id="user" class="text-sm text-gray-300"></div>
+      </header>
+      <!-- Tabs -->
+      <div class="flex gap-2 bg-neutral-900 px-8 pt-4 border-b border-neutral-800">
+        <button class="tab-btn px-4 py-2 rounded-t bg-neutral-800 text-white font-semibold" data-tab="summary">Summary</button>
+        <button class="tab-btn px-4 py-2 rounded-t hover:bg-neutral-800" data-tab="news">News</button>
+        <button class="tab-btn px-4 py-2 rounded-t hover:bg-neutral-800" data-tab="tickets">Tickets</button>
+        <button class="tab-btn px-4 py-2 rounded-t hover:bg-neutral-800" data-tab="products">Products</button>
+        <button class="tab-btn px-4 py-2 rounded-t hover:bg-neutral-800" data-tab="programmes">Programmes</button>
+        <button class="tab-btn px-4 py-2 rounded-t hover:bg-neutral-800" data-tab="uploads">Uploads</button>
+      </div>
+      <!-- Tab panels -->
+      <div class="flex-1 overflow-y-auto bg-neutral-950 px-8 py-6">
+        <div id="tab-summary" class="tab-panel">
+          <div class="grid md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-neutral-800 p-6 rounded shadow flex flex-col items-center"><span class="text-3xl font-bold" id="s_news">—</span><span class="mt-2 text-gray-400">News</span></div>
+            <div class="bg-neutral-800 p-6 rounded shadow flex flex-col items-center"><span class="text-3xl font-bold" id="s_tickets">—</span><span class="mt-2 text-gray-400">Tickets</span></div>
+            <div class="bg-neutral-800 p-6 rounded shadow flex flex-col items-center"><span class="text-3xl font-bold" id="s_products">—</span><span class="mt-2 text-gray-400">Products</span></div>
+          </div>
+        </div>
+        <div id="tab-news" class="tab-panel hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-semibold text-lg">News Management</h2>
+            <button id="openNewsModal" class="bg-blue-600 px-4 py-2 rounded font-semibold">Add News</button>
+          </div>
+          <div id="newsList" class="space-y-2 mb-8"></div>
+        </div>
+        <div id="tab-tickets" class="tab-panel hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-semibold text-lg">Tickets Management</h2>
+            <button id="openTicketModal" class="bg-blue-600 px-4 py-2 rounded font-semibold">Add Ticket</button>
+          </div>
+          <div id="ticketsList" class="space-y-2 mb-8"></div>
+        </div>
+        <div id="tab-products" class="tab-panel hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-semibold text-lg">Products Management</h2>
+            <button id="openProductModal" class="bg-blue-600 px-4 py-2 rounded font-semibold">Add Product</button>
+          </div>
+          <div id="productsList" class="space-y-2 mb-8"></div>
+        </div>
+        <div id="tab-programmes" class="tab-panel hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-semibold text-lg">Programmes Management</h2>
+            <button id="openProgModal" class="bg-blue-600 px-4 py-2 rounded font-semibold">Add Programme</button>
+          </div>
+          <div id="programmesList" class="space-y-2 mb-8"></div>
+        </div>
+        <div id="tab-uploads" class="tab-panel hidden">
+          <div class="bg-neutral-800 p-6 rounded shadow mb-6">
+            <h3 class="font-semibold mb-4 text-lg flex items-center gap-2"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-4 4m4-4l4 4"/></svg> Upload File</h3>
+            <div id="dropArea" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-500 rounded-lg p-8 mb-4 bg-neutral-900 hover:bg-neutral-950 transition cursor-pointer">
+              <svg class="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-4 4m4-4l4 4"/></svg>
+              <span class="text-gray-300">Drag & drop a file here, or <span class="underline text-blue-400 cursor-pointer" id="browseFile">browse</span></span>
+              <input type="file" id="fileInput" accept="image/*,video/*,.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" />
+            </div>
+            <form id="fileUploadForm" enctype="multipart/form-data" class="flex flex-col md:flex-row gap-2 items-center">
+              <div id="filePreview" class="mb-2"></div>
+              <button class="bg-blue-600 p-2 rounded font-semibold">Upload</button>
+              <span id="fileMsg" class="text-sm ml-2"></span>
+            </form>
+          </div>
+          <div class="mb-6">
+            <h4 class="font-semibold mb-2 text-base">Uploaded Images</h4>
+            <div id="adminImageGallery" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"></div>
+            <h4 class="font-semibold mb-2 text-base">Uploaded Videos</h4>
+            <div id="adminVideoGallery" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"></div>
+            <h4 class="font-semibold mb-2 text-base">Uploaded Documents</h4>
+            <div id="adminDocGallery" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Redirect to login if not authenticated
+if (!localStorage.getItem('lc_token')) {
+  location.href = 'login.html';
+}
+const API = "http://localhost:8000";
+function authHeader(){ return 'Bearer ' + (localStorage.getItem('lc_token')||''); }
+window.addEventListener('error', function(e) {
+  console.error('Global JS error:', e.message, e);
+});
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Dashboard JS loaded');
+});
+  // --- Modern upload drag & drop ---
+  const dropArea = document.getElementById('dropArea');
+  const fileInput = document.getElementById('fileInput');
+  const browseFile = document.getElementById('browseFile');
+  const filePreview = document.getElementById('filePreview');
+  if (dropArea && fileInput && browseFile) {
+    dropArea.addEventListener('click', () => fileInput.click());
+    browseFile.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('bg-blue-950'); });
+    dropArea.addEventListener('dragleave', e => { e.preventDefault(); dropArea.classList.remove('bg-blue-950'); });
+    dropArea.addEventListener('drop', e => {
+      e.preventDefault();
+      dropArea.classList.remove('bg-blue-950');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        showFilePreview(fileInput.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) showFilePreview(fileInput.files[0]);
+    });
+  }
+  function showFilePreview(file) {
+    if (!file) { filePreview.innerHTML = ''; return; }
+    let html = '';
+    if (file.type.startsWith('image/')) {
+      html = `<img src="${URL.createObjectURL(file)}" class="w-32 h-32 object-cover rounded shadow mb-2" alt="preview">`;
+    } else if (file.type.startsWith('video/')) {
+      html = `<video src="${URL.createObjectURL(file)}" class="w-32 h-32 rounded shadow mb-2" controls></video>`;
+    } else {
+      html = `<div class="bg-neutral-900 p-4 rounded shadow flex items-center gap-2"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> <span>${file.name}</span></div>`;
+    }
+    filePreview.innerHTML = html;
+  }
+  // --- Tab switching logic ---
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-neutral-800', 'text-white', 'font-semibold'));
+      this.classList.add('bg-neutral-800', 'text-white', 'font-semibold');
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('tab-' + this.dataset.tab).classList.remove('hidden');
+    });
+  });
+  // Show summary tab by default
+  document.querySelector('.tab-btn[data-tab="summary"]').click();
+
+  // --- Modal logic ---
+  window.showModal = function(id) {
+    document.getElementById(id).classList.remove('hidden');
+  }
+  window.hideModal = function(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  // Add modal containers for each content type
+  document.body.insertAdjacentHTML('beforeend', `
+  <div id="newsModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-neutral-900 p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="font-semibold mb-3">Add News</h2>
+      <form id="newsFormModal" class="space-y-2">
+        <input id="newsTitleModal" required placeholder="News Title" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <textarea id="newsContentModal" required placeholder="News Content" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700"></textarea>
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="hideModal('newsModal')" class="px-4 py-2 rounded bg-neutral-700">Cancel</button>
+          <button class="bg-blue-600 px-4 py-2 rounded font-semibold">Add</button>
+        </div>
+        <span id="newsMsgModal" class="text-sm ml-2"></span>
+      </form>
+    </div>
+  </div>
+  <div id="ticketModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-neutral-900 p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="font-semibold mb-3">Add Ticket</h2>
+      <form id="ticketFormModal" class="space-y-2">
+        <input id="ticketNameModal" required placeholder="Event Name" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <input id="ticketDateModal" required placeholder="Event Date" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <input id="ticketPriceModal" required placeholder="Price" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div id="ticketImageDrop" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-500 rounded-lg p-4 mb-2 bg-neutral-900 hover:bg-neutral-950 transition cursor-pointer">
+          <svg class="w-10 h-10 text-blue-400 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-4 4m4-4l4 4"/></svg>
+          <span class="text-gray-300 text-sm">Drag & drop image, or <span class="underline text-blue-400 cursor-pointer" id="ticketBrowseImage">browse</span></span>
+          <input id="ticketImageModal" type="file" accept="image/*" class="hidden" />
+          <div id="ticketImagePreview" class="mt-2"></div>
+        </div>
+        <input id="ticketLocationModal" required placeholder="Location" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <input id="ticketLinkModal" required placeholder="Link" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="hideModal('ticketModal')" class="px-4 py-2 rounded bg-neutral-700">Cancel</button>
+          <button class="bg-blue-600 px-4 py-2 rounded font-semibold">Add</button>
+        </div>
+        <span id="ticketMsgModal" class="text-sm ml-2"></span>
+      </form>
+    </div>
+  </div>
+  <div id="productModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-neutral-900 p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="font-semibold mb-3">Add Product</h2>
+      <form id="productFormModal" class="space-y-2">
+        <input id="productNameModal" required placeholder="Product Name" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <input id="productPriceModal" required placeholder="Price" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div id="productImageDrop" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-500 rounded-lg p-4 mb-2 bg-neutral-900 hover:bg-neutral-950 transition cursor-pointer">
+          <svg class="w-10 h-10 text-blue-400 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-4 4m4-4l4 4"/></svg>
+          <span class="text-gray-300 text-sm">Drag & drop image, or <span class="underline text-blue-400 cursor-pointer" id="productBrowseImage">browse</span></span>
+          <input id="productImageModal" type="file" accept="image/*" class="hidden" />
+          <div id="productImagePreview" class="mt-2"></div>
+        </div>
+        <input id="productDescModal" required placeholder="Description" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="hideModal('productModal')" class="px-4 py-2 rounded bg-neutral-700">Cancel</button>
+          <button class="bg-blue-600 px-4 py-2 rounded font-semibold">Add</button>
+        </div>
+        <span id="productMsgModal" class="text-sm ml-2"></span>
+      </form>
+    </div>
+  </div>
+  <div id="progModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-neutral-900 p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="font-semibold mb-3">Add Programme</h2>
+      <form id="progFormModal" class="space-y-2">
+        <input id="progTitleModal" required placeholder="Programme Title" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div id="progImageDrop" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-500 rounded-lg p-4 mb-2 bg-neutral-900 hover:bg-neutral-950 transition cursor-pointer">
+          <svg class="w-10 h-10 text-blue-400 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 0l-4 4m4-4l4 4"/></svg>
+          <span class="text-gray-300 text-sm">Drag & drop image, or <span class="underline text-blue-400 cursor-pointer" id="progBrowseImage">browse</span></span>
+          <input id="progImageModal" type="file" accept="image/*" class="hidden" />
+          <div id="progImagePreview" class="mt-2"></div>
+        </div>
+        <textarea id="progDescModal" required placeholder="Description" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700"></textarea>
+        <input id="progStartModal" required placeholder="Start Date" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <input id="progEndModal" required placeholder="End Date" class="w-full p-2 rounded bg-neutral-800 border border-neutral-700" />
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="hideModal('progModal')" class="px-4 py-2 rounded bg-neutral-700">Cancel</button>
+          <button class="bg-blue-600 px-4 py-2 rounded font-semibold">Add</button>
+        </div>
+        <span id="progMsgModal" class="text-sm ml-2"></span>
+      </form>
+    </div>
+  </div>
+`);
+
+// Modal openers
+document.getElementById('openNewsModal').onclick = () => showModal('newsModal');
+document.getElementById('openTicketModal').onclick = () => showModal('ticketModal');
+document.getElementById('openProductModal').onclick = () => showModal('productModal');
+document.getElementById('openProgModal').onclick = () => showModal('progModal');
+
+// Modal form handlers (add)
+document.getElementById('newsFormModal').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('newsMsgModal');
+  msg.textContent = '';
+  const title = document.getElementById('newsTitleModal').value;
+  const content = document.getElementById('newsContentModal').value;
+  try {
+    const res = await fetch(API + '/admin/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ title, content })
+    });
+    if (!res.ok) throw new Error('Failed');
+    msg.textContent = 'News added!';
+    document.getElementById('newsFormModal').reset();
+    hideModal('newsModal');
+    loadSummary();
+    loadNewsList();
+  } catch (err) {
+    msg.textContent = 'Error adding news';
+  }
+});
+document.getElementById('ticketFormModal').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('ticketMsgModal');
+  msg.textContent = '';
+  const event_name = document.getElementById('ticketNameModal').value;
+  const event_date = document.getElementById('ticketDateModal').value;
+  const price = document.getElementById('ticketPriceModal').value;
+  const location = document.getElementById('ticketLocationModal').value;
+  const link = document.getElementById('ticketLinkModal').value;
+  let image_url = '';
+  const imageInput = document.getElementById('ticketImageModal');
+  if (imageInput.files && imageInput.files[0]) {
+    const formData = new FormData();
+    formData.append('file', imageInput.files[0]);
+    try {
+      const uploadRes = await fetch(API + '/admin/upload/image', {
+        method: 'POST',
+        headers: { Authorization: authHeader() },
+        body: formData
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadJson.error || 'Image upload failed');
+      image_url = uploadJson.url;
+    } catch (err) {
+      msg.textContent = 'Image upload failed: ' + err.message;
+      return;
+    }
+  }
+  try {
+    const res = await fetch(API + '/admin/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ event_name, event_date, price, image_url, location, link })
+    });
+    if (!res.ok) throw new Error('Failed');
+    msg.textContent = 'Ticket added!';
+    document.getElementById('ticketFormModal').reset();
+    document.getElementById('ticketImagePreview').innerHTML = '';
+    hideModal('ticketModal');
+    loadSummary();
+    loadTicketsList();
+  } catch (err) {
+    msg.textContent = 'Error adding ticket';
+  }
+});
+document.getElementById('productFormModal').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('productMsgModal');
+  msg.textContent = '';
+  const name = document.getElementById('productNameModal').value;
+  const price = document.getElementById('productPriceModal').value;
+  const description = document.getElementById('productDescModal').value;
+  let image_url = '';
+  const imageInput = document.getElementById('productImageModal');
+  if (imageInput.files && imageInput.files[0]) {
+    const formData = new FormData();
+    formData.append('file', imageInput.files[0]);
+    try {
+      const uploadRes = await fetch(API + '/admin/upload/image', {
+        method: 'POST',
+        headers: { Authorization: authHeader() },
+        body: formData
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadJson.error || 'Image upload failed');
+      image_url = uploadJson.url;
+    } catch (err) {
+      msg.textContent = 'Image upload failed: ' + err.message;
+      return;
+    }
+  }
+  try {
+    const res = await fetch(API + '/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ name, price, image_url, description })
+    });
+    if (!res.ok) throw new Error('Failed');
+    msg.textContent = 'Product added!';
+    document.getElementById('productFormModal').reset();
+    document.getElementById('productImagePreview').innerHTML = '';
+    hideModal('productModal');
+    loadSummary();
+    loadProductsList();
+  } catch (err) {
+    msg.textContent = 'Error adding product';
+  }
+});
+document.getElementById('progFormModal').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('progMsgModal');
+  msg.textContent = '';
+  const title = document.getElementById('progTitleModal').value;
+  const description = document.getElementById('progDescModal').value;
+  const start_date = document.getElementById('progStartModal').value;
+  const end_date = document.getElementById('progEndModal').value;
+  let image_url = '';
+  const imageInput = document.getElementById('progImageModal');
+  if (imageInput.files && imageInput.files[0]) {
+    const formData = new FormData();
+    formData.append('file', imageInput.files[0]);
+    try {
+      const uploadRes = await fetch(API + '/admin/upload/image', {
+        method: 'POST',
+        headers: { Authorization: authHeader() },
+        body: formData
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadJson.error || 'Image upload failed');
+      image_url = uploadJson.url;
+    } catch (err) {
+      msg.textContent = 'Image upload failed: ' + err.message;
+      return;
+    }
+  }
+  try {
+    const res = await fetch(API + '/admin/programmes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ title, image_url, description, start_date, end_date })
+    });
+    if (!res.ok) throw new Error('Failed');
+    msg.textContent = 'Programme added!';
+    document.getElementById('progFormModal').reset();
+    document.getElementById('progImagePreview').innerHTML = '';
+    hideModal('progModal');
+    loadProgrammesList();
+    loadSummary();
+  } catch (err) {
+    msg.textContent = 'Error adding programme';
+  }
+});
+
+// Modern drag & drop image upload for modals
+function setupModernImageUpload(dropId, inputId, previewId, browseId) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const browse = document.getElementById(browseId);
+  if (!drop || !input || !preview || !browse) return;
+  drop.addEventListener('click', () => input.click());
+  browse.addEventListener('click', e => { e.stopPropagation(); input.click(); });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('bg-blue-950'); });
+  drop.addEventListener('dragleave', e => { e.preventDefault(); drop.classList.remove('bg-blue-950'); });
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('bg-blue-950');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      showModalImagePreview(input, preview);
+    }
+  });
+  input.addEventListener('change', () => {
+    showModalImagePreview(input, preview);
+  });
+}
+function showModalImagePreview(input, preview) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    if (file.type.startsWith('image/')) {
+      preview.innerHTML = `<div class="relative inline-block"><img src="${URL.createObjectURL(file)}" class="w-32 h-32 object-cover rounded shadow mb-2" alt="preview"><button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" onclick="this.parentNode.parentNode.parentNode.querySelector('input[type=file]').value='';this.parentNode.remove();">×</button></div>`;
+    } else {
+      preview.innerHTML = '';
+    }
+  } else {
+    preview.innerHTML = '';
+  }
+}
+setupModernImageUpload('ticketImageDrop', 'ticketImageModal', 'ticketImagePreview', 'ticketBrowseImage');
+setupModernImageUpload('productImageDrop', 'productImageModal', 'productImagePreview', 'productBrowseImage');
+setupModernImageUpload('progImageDrop', 'progImageModal', 'progImagePreview', 'progBrowseImage');
+// Admin media previews
+async function loadAdminImages() {
+  const res = await fetch(API + '/api/uploads/images');
+  const images = await res.json();
+  const gallery = document.getElementById('adminImageGallery');
+  gallery.innerHTML = images.map(url => `
+    <div class="bg-neutral-900 rounded shadow flex flex-col items-center p-2">
+      <img src="${url}" class="rounded shadow w-full h-32 object-cover mb-2" loading="lazy">
+      <a href="${url}" target="_blank" class="text-xs text-blue-400 underline">View</a>
+    </div>
+  `).join('');
+}
+async function loadAdminVideos() {
+  const res = await fetch(API + '/api/uploads/videos');
+  const videos = await res.json();
+  const gallery = document.getElementById('adminVideoGallery');
+  gallery.innerHTML = videos.map(url => `
+    <div class="bg-neutral-900 rounded shadow flex flex-col items-center p-2">
+      <video src="${url}" class="rounded shadow w-full h-32 mb-2" controls></video>
+      <a href="${url}" target="_blank" class="text-xs text-blue-400 underline">View</a>
+    </div>
+  `).join('');
+}
+async function loadAdminDocs() {
+  const res = await fetch(API + '/api/uploads/docs');
+  const docs = await res.json();
+  const gallery = document.getElementById('adminDocGallery');
+  if (docs.length) {
+    gallery.innerHTML = docs.map(url => `
+      <div class="bg-neutral-900 rounded shadow flex items-center gap-2 p-2 mb-1">
+        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        <a href="${url}" target="_blank" class="text-blue-400 underline">${url.split('/').pop()}</a>
+      </div>
+    `).join('');
+  } else {
+    gallery.innerHTML = '';
+  }
+}
+function loadAllAdminMedia() {
+  loadAdminImages();
+  loadAdminVideos();
+  loadAdminDocs();
+}
+// Programmes list, edit, delete
+async function loadProgrammesList() {
+  const res = await fetch(API + '/admin/programmes', { headers: { Authorization: authHeader() } });
+  const progs = await res.json();
+  const list = document.getElementById('programmesList');
+  if (!progs.length) {
+    list.innerHTML = '<div class="text-gray-400">No programmes yet.</div>';
+    return;
+  }
+  list.innerHTML = progs.map(p => `
+    <div class="bg-neutral-800 rounded shadow p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-lg transition">
+      <div class="flex-1 grid grid-cols-2 gap-2">
+        <div class="flex items-center gap-2 col-span-2">
+          <span class="text-lg font-bold">📺</span>
+          <input value="${p.title ? p.title.replace(/"/g, '&quot;') : ''}" class="prog-title w-full bg-neutral-900 border border-neutral-700 rounded p-1 font-semibold text-lg" data-id="${p.id}" placeholder="Title" />
+        </div>
+        <input value="${p.start_date || ''}" class="prog-start w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Start Date" />
+        <input value="${p.end_date || ''}" class="prog-end w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="End Date" />
+        <textarea class="prog-desc w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Description">${p.description || ''}</textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="save-prog bg-blue-600 px-4 py-1 rounded text-sm font-semibold hover:bg-blue-700 transition" data-id="${p.id}">Save</button>
+        <button class="delete-prog bg-red-600 px-4 py-1 rounded text-sm font-semibold hover:bg-red-700 transition" data-id="${p.id}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  // Save handlers
+  list.querySelectorAll('.save-prog').forEach(btn => {
+    btn.onclick = async function() {
+      const id = this.dataset.id;
+      const title = list.querySelector(`.prog-title[data-id='${id}']`).value;
+      const description = list.querySelector(`.prog-desc[data-id='${id}']`).value;
+      const start_date = list.querySelector(`.prog-start[data-id='${id}']`).value;
+      const end_date = list.querySelector(`.prog-end[data-id='${id}']`).value;
+      await fetch(API + `/admin/programmes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+        body: JSON.stringify({ title, description, start_date, end_date })
+      });
+      loadProgrammesList();
+    };
+  });
+  // Delete handlers
+  list.querySelectorAll('.delete-prog').forEach(btn => {
+    btn.onclick = async function() {
+      if (!confirm('Delete this programme?')) return;
+      const id = this.dataset.id;
+      await fetch(API + `/admin/programmes/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader() }
+      });
+      loadProgrammesList();
+      loadSummary();
+    };
+  });
+}
+loadProgrammesList();
+// Products list, edit, delete
+async function loadProductsList() {
+  const res = await fetch(API + '/admin/products', { headers: { Authorization: authHeader() } });
+  const products = await res.json();
+  const list = document.getElementById('productsList');
+  if (!products.length) {
+    list.innerHTML = '<div class="text-gray-400">No products yet.</div>';
+    return;
+  }
+  list.innerHTML = products.map(p => `
+    <div class="bg-neutral-800 rounded shadow p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-lg transition">
+      <div class="flex flex-col items-center justify-center mr-4">
+        ${p.image_url ? `<img src="${p.image_url}" class="w-20 h-20 object-cover rounded mb-2 border border-neutral-700" alt="Product Image">` : ''}
+      </div>
+      <div class="flex-1 grid grid-cols-2 gap-2">
+        <div class="flex items-center gap-2 col-span-2">
+          <span class="text-lg font-bold">📦</span>
+          <input value="${p.name ? p.name.replace(/"/g, '&quot;') : ''}" class="product-name w-full bg-neutral-900 border border-neutral-700 rounded p-1 font-semibold text-lg" data-id="${p.id}" placeholder="Name" />
+        </div>
+        <input value="${p.price || ''}" class="product-price w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Price" />
+        <input value="${p.currency || ''}" class="product-currency w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Currency" />
+        <input value="${p.image_url || ''}" class="product-image w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Image URL" />
+        <input value="${p.product_url || ''}" class="product-url w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Product URL" />
+        <textarea class="product-desc w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Description">${p.description || ''}</textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="save-product bg-blue-600 px-4 py-1 rounded text-sm font-semibold hover:bg-blue-700 transition" data-id="${p.id}">Save</button>
+        <button class="delete-product bg-red-600 px-4 py-1 rounded text-sm font-semibold hover:bg-red-700 transition" data-id="${p.id}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  // Save handlers
+  list.querySelectorAll('.save-product').forEach(btn => {
+    btn.onclick = async function() {
+      const id = this.dataset.id;
+      const name = list.querySelector(`.product-name[data-id='${id}']`).value;
+      const price = list.querySelector(`.product-price[data-id='${id}']`).value;
+      const currency = list.querySelector(`.product-currency[data-id='${id}']`).value;
+      const image_url = list.querySelector(`.product-image[data-id='${id}']`).value;
+      const product_url = list.querySelector(`.product-url[data-id='${id}']`).value;
+      const description = list.querySelector(`.product-desc[data-id='${id}']`).value;
+      await fetch(API + `/admin/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+        body: JSON.stringify({ name, price, currency, image_url, product_url, description })
+      });
+      loadProductsList();
+    };
+  });
+  // Delete handlers
+  list.querySelectorAll('.delete-product').forEach(btn => {
+    btn.onclick = async function() {
+      if (!confirm('Delete this product?')) return;
+      const id = this.dataset.id;
+      await fetch(API + `/admin/products/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader() }
+      });
+      loadProductsList();
+      loadSummary();
+    };
+  });
+}
+loadProductsList();
+// Tickets list, edit, delete
+async function loadTicketsList() {
+  const res = await fetch(API + '/admin/tickets', { headers: { Authorization: authHeader() } });
+  const tickets = await res.json();
+  const list = document.getElementById('ticketsList');
+  if (!tickets.length) {
+    list.innerHTML = '<div class="text-gray-400">No tickets yet.</div>';
+    return;
+  }
+  list.innerHTML = tickets.map(t => `
+    <div class="bg-neutral-800 rounded shadow p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-lg transition">
+      <div class="flex flex-col items-center justify-center mr-4">
+        ${t.image_url ? `<img src="${t.image_url}" class="w-20 h-20 object-cover rounded mb-2 border border-neutral-700" alt="Ticket Image">` : ''}
+      </div>
+      <div class="flex-1 grid grid-cols-2 gap-2">
+        <div class="flex items-center gap-2 col-span-2">
+          <span class="text-lg font-bold">🎫</span>
+          <input value="${t.event_name.replace(/"/g, '&quot;')}" class="ticket-name w-full bg-neutral-900 border border-neutral-700 rounded p-1 font-semibold text-lg" data-id="${t.id}" />
+        </div>
+        <input value="${t.event_date}" class="ticket-date w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${t.id}" />
+        <input value="${t.price}" class="ticket-price w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${t.id}" />
+        <input value="${t.location}" class="ticket-location w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${t.id}" />
+        <input value="${t.link}" class="ticket-link w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${t.id}" />
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="save-ticket bg-blue-600 px-4 py-1 rounded text-sm font-semibold hover:bg-blue-700 transition" data-id="${t.id}">Save</button>
+        <button class="delete-ticket bg-red-600 px-4 py-1 rounded text-sm font-semibold hover:bg-red-700 transition" data-id="${t.id}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  // Save handlers
+  list.querySelectorAll('.save-ticket').forEach(btn => {
+    btn.onclick = async function() {
+      const id = this.dataset.id;
+      const event_name = list.querySelector(`.ticket-name[data-id='${id}']`).value;
+      const event_date = list.querySelector(`.ticket-date[data-id='${id}']`).value;
+      const price = list.querySelector(`.ticket-price[data-id='${id}']`).value;
+      const location = list.querySelector(`.ticket-location[data-id='${id}']`).value;
+      const link = list.querySelector(`.ticket-link[data-id='${id}']`).value;
+      await fetch(API + `/admin/tickets/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+        body: JSON.stringify({ event_name, event_date, price, location, link })
+      });
+      loadTicketsList();
+    };
+  });
+  // Delete handlers
+  list.querySelectorAll('.delete-ticket').forEach(btn => {
+    btn.onclick = async function() {
+      if (!confirm('Delete this ticket?')) return;
+      const id = this.dataset.id;
+      await fetch(API + `/admin/tickets/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader() }
+      });
+      loadTicketsList();
+      loadSummary();
+    };
+  });
+}
+// News list, edit, delete
+async function loadNewsList() {
+  const res = await fetch(API + '/admin/news', { headers: { Authorization: authHeader() } });
+  const news = await res.json();
+  const list = document.getElementById('newsList');
+  if (!news.length) {
+    list.innerHTML = '<div class="text-gray-400">No news yet.</div>';
+    return;
+  }
+  list.innerHTML = progs.map(p => `
+    <div class="bg-neutral-800 rounded shadow p-4 flex flex-col md:flex-row md:items-center gap-4 hover:shadow-lg transition">
+      <div class="flex flex-col items-center justify-center mr-4">
+        ${p.image_url ? `<img src="${p.image_url}" class="w-20 h-20 object-cover rounded mb-2 border border-neutral-700" alt="Programme Image">` : ''}
+      </div>
+      <div class="flex-1 grid grid-cols-2 gap-2">
+        <div class="flex items-center gap-2 col-span-2">
+          <span class="text-lg font-bold">�</span>
+          <input value="${p.title ? p.title.replace(/"/g, '&quot;') : ''}" class="prog-title w-full bg-neutral-900 border border-neutral-700 rounded p-1 font-semibold text-lg" data-id="${p.id}" placeholder="Title" />
+        </div>
+        <input value="${p.start_date || ''}" class="prog-start w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Start Date" />
+        <input value="${p.end_date || ''}" class="prog-end w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="End Date" />
+        <textarea class="prog-desc w-full bg-neutral-900 border border-neutral-700 rounded p-1 mb-1" data-id="${p.id}" placeholder="Description">${p.description || ''}</textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <button class="save-prog bg-blue-600 px-4 py-1 rounded text-sm font-semibold hover:bg-blue-700 transition" data-id="${p.id}">Save</button>
+        <button class="delete-prog bg-red-600 px-4 py-1 rounded text-sm font-semibold hover:bg-red-700 transition" data-id="${p.id}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+    btn.onclick = async function() {
+      const id = this.dataset.id;
+      const title = list.querySelector(`.news-title[data-id='${id}']`).value;
+      const content = list.querySelector(`.news-content[data-id='${id}']`).value;
+      await fetch(API + `/admin/news/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+        body: JSON.stringify({ title, content })
+      });
+      loadNewsList();
+    };
+  };
+  // Delete handlers
+  list.querySelectorAll('.delete-news').forEach(btn => {
+    btn.onclick = async function() {
+      if (!confirm('Delete this news item?')) return;
+      const id = this.dataset.id;
+      await fetch(API + `/admin/news/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: authHeader() }
+      });
+      loadNewsList();
+      loadSummary();
+    };
+  });
+
+
+// Single file upload (image, video, or document)
+document.getElementById('fileUploadForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('fileMsg');
+  msg.textContent = '';
+  const file = document.getElementById('fileInput').files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  let endpoint = '/admin/upload/doc';
+  if (file.type.startsWith('image/')) endpoint = '/admin/upload/image';
+  else if (file.type.startsWith('video/')) endpoint = '/admin/upload/video';
+  try {
+    const res = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: { Authorization: authHeader() },
+      body: formData
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error||'Failed');
+    msg.textContent = 'Uploaded! URL: ' + j.url;
+  loadAllAdminMedia();
+  } catch (err) {
+    msg.textContent = 'Error: ' + err.message;
+  }
+});
+
+// Programme form
+document.getElementById('progForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const msg = document.getElementById('progMsg');
+  msg.textContent = '';
+  const title = document.getElementById('progTitle').value;
+  const description = document.getElementById('progDesc').value;
+  const start_date = document.getElementById('progStart').value;
+  const end_date = document.getElementById('progEnd').value;
+  try {
+    const res = await fetch(API + '/admin/programmes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ title, description, start_date, end_date })
+    });
+    if (!res.ok) throw new Error('Failed');
+    msg.textContent = 'Programme added!';
+    document.getElementById('progForm').reset();
+  } catch (err) {
+    msg.textContent = 'Error adding programme';
+  }
+});
+async function loadSummary(){
+  try{
+    const res = await fetch(API + '/admin/summary', { headers: { Authorization: authHeader() } });
+    if(!res.ok){ location.href = 'login.html'; return; }
+    const j = await res.json();
+    document.getElementById('s_news').textContent = j.news;
+    document.getElementById('s_tickets').textContent = j.tickets;
+    document.getElementById('s_products').textContent = j.products;
+    document.getElementById('user').textContent = 'admin';
+  }catch(err){
+    console.error(err);
+    location.href = 'login.html';
+  }
+}
+document.getElementById('logout').addEventListener('click', function(){ localStorage.removeItem('lc_token'); location.href='login.html'; });
+// News form submit
+document.getElementById('newsForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  document.getElementById('newsMsg').textContent = '';
+  const title = document.getElementById('newsTitle').value;
+  const content = document.getElementById('newsContent').value;
+  try {
+    const res = await fetch(API + '/admin/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ title, content })
+    });
+    if (!res.ok) throw new Error('Failed');
+    document.getElementById('newsMsg').textContent = 'News added!';
+    document.getElementById('newsForm').reset();
+  loadSummary();
+  loadNewsList();
+  } catch (err) {
+    document.getElementById('newsMsg').textContent = 'Error adding news';
+  }
+});
+
+// Ticket form submit
+document.getElementById('ticketForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  document.getElementById('ticketMsg').textContent = '';
+  const event_name = document.getElementById('ticketName').value;
+  const event_date = document.getElementById('ticketDate').value;
+  const price = document.getElementById('ticketPrice').value;
+  const location = document.getElementById('ticketLocation').value;
+  const link = document.getElementById('ticketLink').value;
+  try {
+    const res = await fetch(API + '/admin/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ event_name, event_date, price, location, link })
+    });
+    if (!res.ok) throw new Error('Failed');
+    document.getElementById('ticketMsg').textContent = 'Ticket added!';
+    document.getElementById('ticketForm').reset();
+  loadSummary();
+  loadTicketsList();
+  } catch (err) {
+    document.getElementById('ticketMsg').textContent = 'Error adding ticket';
+  }
+});
+
+loadSummary();
+loadNewsList();
+loadTicketsList();
+loadAllAdminMedia();
+</script>
+</body>
+</html>

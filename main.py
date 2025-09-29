@@ -18,6 +18,7 @@ ADMIN_DIR = os.path.join(BASE_DIR, "admin")
 DB_PATH = os.path.join(BASE_DIR, "db.sqlite3")
 UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(ADMIN_DIR, exist_ok=True)  # ensure admin folder exists
 
 # ---------------- APP INIT ----------------
 app = FastAPI(title="Lake City Studios API")
@@ -31,7 +32,9 @@ app.add_middleware(
 )
 
 # Serve static files
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ---------------- DATABASE ----------------
 def get_db():
@@ -97,85 +100,86 @@ def verify_token_header(authorization: str | None = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token")
     return data
 
+# ---------------- ROOT ----------------
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Lake City Studios API running"}
+
 # ---------------- ADMIN HTML ROUTES ----------------
 @app.get("/admin/login", response_class=FileResponse)
 def serve_admin_login():
     file_path = os.path.join(ADMIN_DIR, "login.html")
     if not os.path.exists(file_path):
-        raise HTTPException(404, f"Login page not found at {file_path}")
+        # return simple placeholder if file missing
+        return {"message": "Admin login page not found"}
     return FileResponse(file_path)
 
 @app.get("/admin/dashboard", response_class=FileResponse)
 def serve_admin_dashboard(user=Depends(verify_token_header)):
     file_path = os.path.join(ADMIN_DIR, "dashboard.html")
     if not os.path.exists(file_path):
-        raise HTTPException(404, f"Dashboard not found at {file_path}")
+        return {"message": "Admin dashboard page not found"}
     return FileResponse(file_path)
 
 # ---------------- UPLOAD ROUTES ----------------
-@app.post("/admin/upload/programme")
-def upload_programme(title: str, description: str, start_date: str, end_date: str,
-                     file: UploadFile = File(...), user=Depends(verify_token_header)):
-    filename = f"programme_{secrets.token_hex(8)}_{file.filename}"
+def save_file(file: UploadFile, prefix: str):
+    filename = f"{prefix}_{secrets.token_hex(8)}_{file.filename}"
     filepath = os.path.join(UPLOAD_DIR, filename)
     with open(filepath, "wb") as buffer:
         buffer.write(file.file.read())
+    return f"/static/uploads/{filename}"
+
+@app.post("/admin/upload/programme")
+def upload_programme(title: str, description: str, start_date: str, end_date: str,
+                     file: UploadFile = File(...), user=Depends(verify_token_header)):
+    image_url = save_file(file, "programme")
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""INSERT INTO programmes (title, description, start_date, end_date, image_url, created_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (title, description, start_date, end_date, f"/static/uploads/{filename}", int(time.time())))
+                (title, description, start_date, end_date, image_url, int(time.time())))
     conn.commit()
     conn.close()
-    return {"message": "Programme uploaded", "image_url": f"/static/uploads/{filename}"}
+    return {"message": "Programme uploaded", "image_url": image_url}
 
 @app.post("/admin/upload/product")
 def upload_product(name: str, price: str, currency: str, description: str,
                    file: UploadFile = File(...), user=Depends(verify_token_header)):
-    filename = f"product_{secrets.token_hex(8)}_{file.filename}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    with open(filepath, "wb") as buffer:
-        buffer.write(file.file.read())
+    image_url = save_file(file, "product")
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""INSERT INTO products (name, price, currency, description, image_url, created_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (name, price, currency, description, f"/static/uploads/{filename}", int(time.time())))
+                (name, price, currency, description, image_url, int(time.time())))
     conn.commit()
     conn.close()
-    return {"message": "Product uploaded", "image_url": f"/static/uploads/{filename}"}
+    return {"message": "Product uploaded", "image_url": image_url}
 
 @app.post("/admin/upload/news")
 def upload_news(title: str, content: str, file: UploadFile = File(...),
                 user=Depends(verify_token_header)):
-    filename = f"news_{secrets.token_hex(8)}_{file.filename}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    with open(filepath, "wb") as buffer:
-        buffer.write(file.file.read())
+    image_url = save_file(file, "news")
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""INSERT INTO news (title, content, image_url, created_at)
                    VALUES (?, ?, ?, ?)""",
-                (title, content, f"/static/uploads/{filename}", int(time.time())))
+                (title, content, image_url, int(time.time())))
     conn.commit()
     conn.close()
-    return {"message": "News uploaded", "image_url": f"/static/uploads/{filename}"}
+    return {"message": "News uploaded", "image_url": image_url}
 
 @app.post("/admin/upload/ticket")
 def upload_ticket(event_name: str, event_date: str, price: str, location: str, link: str,
                   file: UploadFile = File(...), user=Depends(verify_token_header)):
-    filename = f"ticket_{secrets.token_hex(8)}_{file.filename}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    with open(filepath, "wb") as buffer:
-        buffer.write(file.file.read())
+    image_url = save_file(file, "ticket")
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""INSERT INTO tickets (event_name, event_date, price, location, link, image_url, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (event_name, event_date, price, location, link, f"/static/uploads/{filename}", int(time.time())))
+                (event_name, event_date, price, location, link, image_url, int(time.time())))
     conn.commit()
     conn.close()
-    return {"message": "Ticket uploaded", "image_url": f"/static/uploads/{filename}"}
+    return {"message": "Ticket uploaded", "image_url": image_url}
 
 # ---------------- PUBLIC APIS ----------------
 @app.get("/api/programmes")
@@ -231,7 +235,6 @@ def subscribe(sub: SubscribeIn):
         raise HTTPException(400, "Email already subscribed")
     conn.close()
 
-    # also save in a txt file
     with open(os.path.join(BASE_DIR, "subscribers.txt"), "a") as f:
         f.write(f"{time.ctime()} | {sub.email}\n")
 
@@ -250,7 +253,7 @@ def get_subscribers(user=Depends(verify_token_header)):
 class OrderIn(BaseModel):
     client_name: str
     client_email: str
-    item_type: str   # "product" | "ticket" | "programme"
+    item_type: str
     item_id: int
     quantity: int
 
@@ -265,10 +268,8 @@ def create_order(order: OrderIn):
     conn.commit()
     conn.close()
 
-    # also save in a txt file
-    log_line = f"{time.ctime()} | {order.client_name} | {order.client_email} | {order.item_type}:{order.item_id} | qty={order.quantity}\n"
     with open(os.path.join(BASE_DIR, "orders_log.txt"), "a") as f:
-        f.write(log_line)
+        f.write(f"{time.ctime()} | {order.client_name} | {order.client_email} | {order.item_type}:{order.item_id} | qty={order.quantity}\n")
 
     return {"message": "Order saved successfully"}
 
@@ -302,6 +303,6 @@ def edit_programme(programme_id: int, data: EditProgramme, user=Depends(verify_t
 
 # ---------------- MAIN ENTRY ----------------
 if __name__ == "__main__":
-    import uvicorn, os
-    port = int(os.environ.get("PORT", 8000))   # Railway assigns the port
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)

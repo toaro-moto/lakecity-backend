@@ -1,18 +1,16 @@
 from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import os
-import pathlib
-import secrets
 import sqlite3
 import base64
 import requests
 import jwt
 import time
-from datetime import datetime   # ✅ clean datetime import
+from datetime import datetime
 
 # ---------------- CONFIG ----------------
 JWT_SECRET = "lakecityrecordingstudio"  # change before production
@@ -22,7 +20,6 @@ ADMIN_PASS = "001JAMES"  # demo only (not secure!)
 
 BASE_DIR = os.path.dirname(__file__)
 
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 ADMIN_DIR = os.path.join(BASE_DIR, "admin")
 
 DB_PATH = os.path.join(BASE_DIR, "db.sqlite3")
@@ -34,16 +31,14 @@ app = FastAPI(title="Lake City Studios API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # ✅ in production, restrict to your domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve static files (images, css, js, uploads)
+# ✅ Only serve static uploads + admin (no frontend here)
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
-app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="assets")
 
 # ---------------- DATABASE ----------------
 def get_db():
@@ -105,24 +100,9 @@ def serve_admin_dashboard(user=Depends(verify_token_header)):
         raise HTTPException(404, f"Dashboard not found at {file_path}")
     return FileResponse(file_path)
 
-# ---------------- FRONTEND HTML ROUTES ----------------
-@app.get("/", response_class=FileResponse)
-def serve_index():
-    file_path = os.path.join(FRONTEND_DIR, "index.html")
-    if not os.path.exists(file_path):
-        raise HTTPException(404, f"Index not found at {file_path}")
-    return FileResponse(file_path)
-
-@app.get("/{page_name}.html", response_class=FileResponse)
-def serve_html_page(page_name: str):
-    file_path = os.path.join(FRONTEND_DIR, f"{page_name}.html")
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(404, f"Page {page_name}.html not found")
-
 # ---------------- MPESA INTEGRATION ----------------
-MPESA_CONSUMER_KEY = "mj8H51HGdZ8SZptHiWDHGy3hJEVzew7A6YqfWaioy7xJsjgX"
-MPESA_CONSUMER_SECRET = "YBE9x8dhVuNiY5ukBzTZgX3Cx1VEBANptMmjsAhMfRNPDj2oIceRrpuQ6B5x0fQr"
+MPESA_CONSUMER_KEY = "YOUR_CONSUMER_KEY"
+MPESA_CONSUMER_SECRET = "YOUR_CONSUMER_SECRET"
 MPESA_SHORTCODE = "174379"  # sandbox test shortcode
 MPESA_PASSKEY = "YOUR_PASSKEY"
 MPESA_BASE_URL = "https://sandbox.safaricom.co.ke"
@@ -139,11 +119,11 @@ def get_mpesa_token():
 @app.post("/pay/mpesa")
 def stk_push_payment(phone: str, amount: int):
     token = get_mpesa_token()
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # ✅ clean datetime use
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     password = base64.b64encode((MPESA_SHORTCODE + MPESA_PASSKEY + timestamp).encode()).decode()
 
     payload = {
-        "BusinessShortCode": 600100,
+        "BusinessShortCode": MPESA_SHORTCODE,
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
@@ -152,7 +132,7 @@ def stk_push_payment(phone: str, amount: int):
         "PartyB": MPESA_SHORTCODE,
         "PhoneNumber": phone,
         "CallBackURL": "https://lakecitystudios.co.ke/api/mpesa/callback",
-        "AccountReference": "0100011399414",
+        "AccountReference": "Booking",
         "TransactionDesc": "Studio Booking Payment"
     }
 
@@ -167,7 +147,6 @@ def stk_push_payment(phone: str, amount: int):
 async def mpesa_callback(request: Request):
     data = await request.json()
     print("✅ M-Pesa Callback:", data)
-    # TODO: Save transaction into DB
     return {"ResultCode": 0, "ResultDesc": "Accepted"}
 
 # ---------------- MAIN ENTRY ----------------

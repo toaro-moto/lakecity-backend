@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from fastapi import FastAPI
+
+app = FastAPI(title="Lake City Studio API")
 
 import os, time, sqlite3, jwt, secrets
 
